@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pedido de Marmita</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        body { font-family: sans-serif; background: #f2f2f2; display: flex; justify-content: center; padding: 20px; margin: 0; }
+        .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        h2 { text-align: center; color: #333; margin-bottom: 20px; }
+        label { font-weight: bold; color: #555; display: block; margin-bottom: 5px; }
+        input, textarea { width: 100%; padding: 15px; margin-bottom: 20px; border: 2px solid #eee; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        button { width: 100%; padding: 15px; background: #28a745; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>🍱 Fazer Pedido</h2>
+        <label>Nome do Motoboy:</label>
+        <input type="text" id="nome" placeholder="Seu nome">
+        <label>Marmita:</label>
+        <textarea id="pedido" placeholder="Ex: 1 Média, arroz e feijão"></textarea>
+        <button onclick="enviar()">SOLICITAR AGORA</button>
+    </div>
+    <script>
+        const firebaseConfig = { databaseURL: "https://marmitas-motoboys-default-rtdb.firebaseio.com/" };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        function enviar() {
+            const nome = document.getElementById('nome').value;
+            const pedido = document.getElementById('pedido').value;
+            if(!nome || !pedido) return alert("Preencha seu nome e o pedido!");
+
+            db.ref('pedidos').push({
+                motoboy: nome,
+                descricao: pedido,
+                status: 'pendente',
+                hora: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+            }).then(() => {
+                alert("Pedido enviado ao caixa!");
+                document.getElementById('nome').value = "";
+                document.getElementById('pedido').value = "";
+            });
+        }
+    </script>
+</body>
+</html>
