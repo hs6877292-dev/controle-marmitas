@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel do Caixa - Marmitas</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        body { font-family: sans-serif; background: #1a1a1a; color: white; padding: 20px; margin: 0; }
+        h1 { text-align: center; color: #28a745; font-size: 22px; }
+        .pedido { background: #333; margin-bottom: 12px; padding: 15px; border-radius: 10px; border-left: 8px solid #dc3545; display: flex; justify-content: space-between; align-items: center; }
+        .pedido.entregue { border-left-color: #28a745; opacity: 0.6; }
+        .info strong { font-size: 1.1em; color: #fff; }
+        .info p { margin: 5px 0; color: #ccc; }
+        .btn-ok { background: #28a745; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .btn-del { background: #555; color: white; border: none; padding: 12px; border-radius: 6px; margin-left: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>💻 MARMITAS MOTOBOY</h1>
+    <div id="lista">Carregando pedidos...</div>
+
+    <script>
+        const senhaMestra = "1234"; // Defina sua senha aqui
+        const firebaseConfig = { databaseURL: "https://marmitas-motoboys-default-rtdb.firebaseio.com/" };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        db.ref('pedidos').on('value', (snapshot) => {
+            const listaDiv = document.getElementById('lista');
+            listaDiv.innerHTML = "";
+            const data = snapshot.val();
+            
+            if (!data) {
+                listaDiv.innerHTML = "<p style='text-align:center'>Nenhum pedido na fila.</p>";
+                return;
+            }
+
+            for (let id in data) {
+                const p = data[id];
+                const div = document.createElement('div');
+                div.className = `pedido ${p.status === 'entregue' ? 'entregue' : ''}`;
+                div.innerHTML = `
+                    <div class="info">
+                        <small style="color:#888">${p.hora}</small><br>
+                        <strong>${p.motoboy}</strong>
+                        <p>${p.descricao}</p>
+                    </div>
+                    <div>
+                        <button class="btn-ok" onclick="status('${id}', '${p.status}')">
+                            ${p.status === 'pendente' ? 'BAIXA' : '↩️'}
+                        </button>
+                        <button class="btn-del" onclick="excluir('${id}')">🗑️</button>
+                    </div>
+                `;
+                listaDiv.prepend(div); // Novos pedidos no topo
+            }
+        });
+
+        function status(id, atual) {
+            db.ref('pedidos/' + id).update({ status: atual === 'pendente' ? 'entregue' : 'pendente' });
+        }
+
+        function excluir(id) {
+            if(prompt("Digite a senha de administrador:") === senhaMestra) {
+                db.ref('pedidos/' + id).remove();
+            } else {
+                alert("Senha incorreta!");
+            }
+        }
+    </script>
+</body>
+</html>
