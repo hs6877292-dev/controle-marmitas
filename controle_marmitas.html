@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Sistema de Marmitas - QR Code</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #f2f2f2;
+    padding: 20px;
+}
+h1 {
+    text-align: center;
+}
+.container {
+    max-width: 600px;
+    margin: auto;
+}
+form, .painel {
+    background: #fff;
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+}
+input, textarea, button {
+    width: 100%;
+    padding: 10px;
+    margin: 6px 0;
+}
+button {
+    background: #2e86de;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+}
+button:hover {
+    background: #1b4f72;
+}
+.pendente {
+    background: #f8d7da;
+}
+.despachado {
+    background: #d4edda;
+}
+.pedido {
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+small {
+    color: #555;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🍱 Sistema de Marmitas</h1>
+<div class="container" id="conteudo"></div>
+
+<script>
+let pedidos = JSON.parse(localStorage.getItem("pedidosQR")) || [];
+
+// --------- ROTEAMENTO SIMPLES ----------
+const params = new URLSearchParams(window.location.search);
+const modo = params.get("modo"); // pedido | painel
+
+// --------- TELA DO MOTOBOY ----------
+if (modo === "pedido") {
+document.getElementById("conteudo").innerHTML = `
+<form id="formPedido">
+    <h2>📱 Pedido do Motoboy</h2>
+
+    <label>Nome do Motoboy</label>
+    <input type="text" id="motoboy" required>
+
+    <label>Pedido</label>
+    <textarea id="pedido" placeholder="Ex: 2 PF + 1 Fitness" required></textarea>
+
+    <button type="submit">Enviar Pedido</button>
+    <small>Data e hora são registradas automaticamente</small>
+</form>
+`;
+
+document.getElementById("formPedido").addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    const agora = new Date();
+
+    pedidos.push({
+        data: agora.toLocaleDateString(),
+        hora: agora.toLocaleTimeString(),
+        timestamp: agora,
+        motoboy: motoboy.value,
+        pedido: pedido.value,
+        status: "PENDENTE"
+    });
+
+    localStorage.setItem("pedidosQR", JSON.stringify(pedidos));
+    alert("✅ Pedido enviado com sucesso!");
+    this.reset();
+});
+}
+
+// --------- PAINEL DO CAIXA ----------
+else {
+document.getElementById("conteudo").innerHTML = `
+<div class="painel">
+<h2>💻 Painel do Caixa</h2>
+<div id="listaPedidos"></div>
+</div>
+`;
+
+function renderizar() {
+    const lista = document.getElementById("listaPedidos");
+    lista.innerHTML = "";
+
+    pedidos.forEach((p, i) => {
+        const div = document.createElement("div");
+        div.className = "pedido " + (p.status === "PENDENTE" ? "pendente" : "despachado");
+
+        div.innerHTML = `
+        <strong>${p.motoboy}</strong><br>
+        🕒 ${p.data} - ${p.hora}<br>
+        🍱 ${p.pedido}<br>
+        <strong>Status:</strong> ${p.status}<br>
+        ${p.status === "PENDENTE" ? `<button onclick="despachar(${i})">Despachar</button>` : ""}
+        `;
+        lista.appendChild(div);
+    });
+}
+
+window.despachar = function(index) {
+    pedidos[index].status = "DESPACHADO";
+    localStorage.setItem("pedidosQR", JSON.stringify(pedidos));
+    renderizar();
+};
+
+renderizar();
+}
+</script>
+
+</body>
+</html>
